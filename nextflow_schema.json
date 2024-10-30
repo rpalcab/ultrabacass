@@ -20,13 +20,15 @@
                     "mimetype": "text/csv",
                     "description": "Path to tab-separated sample sheet",
                     "help_text": "Path to sample sheet, either tab-separated (.tsv), comma-separated (.csv), or in YAML format (.yml/.yaml), that points to compressed fastq files.\n\nThe sample sheet must have six tab-separated columns/entries with the following headers: \n- `ID` (required): Unique sample IDs, must start with a letter, and can only contain letters, numbers or underscores\n- `R1` (optional): Paths to (forward) reads zipped FastQ files\n- `R2` (optional): Paths to reverse reads zipped FastQ files, required if the data is paired-end\n- `LongFastQ` (optional): Paths to long reads zipped FastQ files\n- `Fast5` (optional): Paths to the directory containing FAST5 files\n- `GenomeSize` (optional): A number (including decimals) ending with 'm', representing genome size.\n\n Please be aware that files will be required based on the chosen assembly type specified with the '--assembly_type' option, which can be set to one of the following values: ['short', 'long', 'hybrid'].`",
-                    "fa_icon": "fas fa-dna"
+                    "fa_icon": "fas fa-dna",
+                    "default": "./samplesheet.tsv"
                 },
                 "outdir": {
                     "type": "string",
                     "format": "directory-path",
                     "description": "The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.",
-                    "fa_icon": "fas fa-folder-open"
+                    "fa_icon": "fas fa-folder-open",
+                    "default": "results"
                 },
                 "email": {
                     "type": "string",
@@ -105,14 +107,14 @@
             "properties": {
                 "assembler": {
                     "type": "string",
-                    "default": "unicycler",
+                    "default": "dragonflye",
                     "fa_icon": "fas fa-puzzle-piece",
                     "description": "The assembler to use for assembly. Use the appropriate assembler according to the chosen assembly_type. Refer to the README.md for further clarification.",
                     "enum": ["unicycler", "canu", "miniasm", "dragonflye"]
                 },
                 "assembly_type": {
                     "type": "string",
-                    "default": "short",
+                    "default": "long",
                     "fa_icon": "fas fa-fingerprint",
                     "help_text": "This adjusts the type of assembly done with the input data and can be any of `long`, `short` or `hybrid`.",
                     "description": "Which type of assembly to perform.",
@@ -127,7 +129,8 @@
                 "canu_mode": {
                     "type": "string",
                     "enum": ["-pacbio", "-nanopore", "-pacbio-hifi", "null"],
-                    "description": "Allowed technologies for long read assembly."
+                    "description": "Allowed technologies for long read assembly.",
+                    "default": "-nanopore"
                 },
                 "canu_args": {
                     "type": "string",
@@ -167,7 +170,7 @@
             "properties": {
                 "annotation_tool": {
                     "type": "string",
-                    "default": "prokka",
+                    "default": "bakta",
                     "description": "The annotation method to annotate the final assembly.",
                     "enum": ["prokka", "bakta", "dfast"]
                 },
@@ -182,7 +185,8 @@
                 },
                 "baktadb_download": {
                     "type": "boolean",
-                    "description": "Download Bakta database"
+                    "description": "Download Bakta database",
+                    "default": true
                 },
                 "baktadb_download_args": {
                     "type": "string",
@@ -192,7 +196,7 @@
                 },
                 "dfast_config": {
                     "type": "string",
-                    "default": "assets/test_config_dfast.py",
+                    "default": "/home/athena/Desktop/ultrabacass/assets/test_config_dfast.py",
                     "description": "Specifies a configuration file for the [DFAST](https://github.com/nigyta/dfast_core) annotation method.",
                     "help_text": "If you want to know how to create your config file, please refer to the [DFAST](https://github.com/nigyta/dfast_core) readme on how to create one.  The default config (`assets/test_config_dfast.py`) is just included for testing, so if you want to annotate using DFAST, you have to create a config!"
                 }
@@ -208,12 +212,14 @@
                 "skip_kraken2": {
                     "type": "boolean",
                     "fa_icon": "fas fa-forward",
-                    "description": "Skip running Kraken2 classifier on reads."
+                    "description": "Skip running Kraken2 classifier on reads.",
+                    "default": true
                 },
                 "skip_kmerfinder": {
                     "type": "boolean",
                     "description": "Skip contamination analysis with [Kmerfinder](https://bitbucket.org/genomicepidemiology/kmerfinder/src/master/)",
-                    "fa_icon": "fas fa-forward"
+                    "fa_icon": "fas fa-forward",
+                    "default": true
                 },
                 "skip_annotation": {
                     "type": "boolean",
@@ -223,12 +229,14 @@
                 "skip_pycoqc": {
                     "type": "boolean",
                     "fa_icon": "fas fa-forward",
-                    "description": "Skip running `PycoQC` on long read input."
+                    "description": "Skip running `PycoQC` on long read input.",
+                    "default": true
                 },
                 "skip_polish": {
                     "type": "boolean",
                     "fa_icon": "fas fa-forward",
-                    "description": "Skip polishing the long-read assembly with fast5 input. Will not affect short/hybrid assemblies."
+                    "description": "Skip polishing the long-read assembly with fast5 input. Will not affect short/hybrid assemblies.",
+                    "default": true
                 },
                 "skip_multiqc": {
                     "type": "boolean",
@@ -422,5 +430,152 @@
         {
             "$ref": "#/$defs/generic_options"
         }
-    ]
+    ],
+    "properties": {
+        "run_arg_screening": {
+            "type": "boolean",
+            "default": true
+        },
+        "arg_skip_fargene": {
+            "type": "boolean"
+        },
+        "arg_fargene_hmmmodel": {
+            "type": "string",
+            "default": "class_a,class_b_1_2,class_b_3,class_c,class_d_1,class_d_2,qnr,tet_efflux,tet_rpg,tet_enzyme"
+        },
+        "arg_fargene_savetmpfiles": {
+            "type": "boolean"
+        },
+        "arg_fargene_minorflength": {
+            "type": "integer",
+            "default": 90
+        },
+        "arg_fargene_score": {
+            "type": "string"
+        },
+        "arg_fargene_translationformat": {
+            "type": "string",
+            "default": "pearson"
+        },
+        "arg_fargene_orffinder": {
+            "type": "boolean"
+        },
+        "arg_skip_rgi": {
+            "type": "boolean"
+        },
+        "arg_rgi_db": {
+            "type": "string"
+        },
+        "arg_rgi_savejson": {
+            "type": "boolean"
+        },
+        "arg_rgi_savetmpfiles": {
+            "type": "boolean"
+        },
+        "arg_rgi_alignmenttool": {
+            "type": "string",
+            "default": "BLAST"
+        },
+        "arg_rgi_includeloose": {
+            "type": "boolean"
+        },
+        "arg_rgi_includenudge": {
+            "type": "boolean"
+        },
+        "arg_rgi_lowquality": {
+            "type": "boolean"
+        },
+        "arg_rgi_data": {
+            "type": "string",
+            "default": "NA"
+        },
+        "arg_rgi_split_prodigal_jobs": {
+            "type": "boolean",
+            "default": true
+        },
+        "arg_skip_amrfinderplus": {
+            "type": "boolean"
+        },
+        "arg_amrfinderplus_db": {
+            "type": "string"
+        },
+        "arg_amrfinderplus_identmin": {
+            "type": "integer",
+            "default": -1
+        },
+        "arg_amrfinderplus_coveragemin": {
+            "type": "number",
+            "default": 0.5
+        },
+        "arg_amrfinderplus_translationtable": {
+            "type": "integer",
+            "default": 11
+        },
+        "arg_amrfinderplus_plus": {
+            "type": "boolean"
+        },
+        "arg_amrfinderplus_name": {
+            "type": "boolean"
+        },
+        "arg_skip_deeparg": {
+            "type": "boolean",
+            "default": true
+        },
+        "arg_deeparg_db": {
+            "type": "string"
+        },
+        "arg_deeparg_db_version": {
+            "type": "integer",
+            "default": 2
+        },
+        "arg_deeparg_model": {
+            "type": "string",
+            "default": "LS"
+        },
+        "arg_deeparg_minprob": {
+            "type": "number",
+            "default": 0.8
+        },
+        "arg_deeparg_alignmentidentity": {
+            "type": "integer",
+            "default": 50
+        },
+        "arg_deeparg_alignmentevalue": {
+            "type": "number",
+            "default": 1e-10
+        },
+        "arg_deeparg_alignmentoverlap": {
+            "type": "number",
+            "default": 0.8
+        },
+        "arg_deeparg_numalignmentsperentry": {
+            "type": "integer",
+            "default": 1000
+        },
+        "arg_skip_abricate": {
+            "type": "boolean"
+        },
+        "arg_abricate_db_id": {
+            "type": "string",
+            "default": "ncbi"
+        },
+        "arg_abricate_db": {
+            "type": "string"
+        },
+        "arg_abricate_minid": {
+            "type": "integer",
+            "default": 80
+        },
+        "arg_abricate_mincov": {
+            "type": "integer",
+            "default": 80
+        },
+        "arg_hamronization_summarizeformat": {
+            "type": "string",
+            "default": "tsv"
+        },
+        "arg_skip_argnorm": {
+            "type": "boolean"
+        }
+    }
 }

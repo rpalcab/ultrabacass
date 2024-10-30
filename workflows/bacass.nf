@@ -49,7 +49,9 @@ include { paramsSummaryMap                      } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc                  } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML                } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText                } from '../subworkflows/local/utils_nfcore_bacass_pipeline'
-
+include { ARG                                   } from '../subworkflows/local/arg'
+include { TAXONOMY                              } from '../subworkflows/local/taxonomy'
+include { PITIS                                 } from '../subworkflows/local/pitis'
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     CONFIG FILES
@@ -517,6 +519,46 @@ workflow BACASS {
     }
 
     //
+    // SUBWORKFLOW: ARG, comprehensive AbR annotation.
+    //
+    // Adapted from nf-core/funcscan.
+
+    if ( params.run_arg_screening ) {
+        if ( params.arg_skip_deeparg ) {
+            ARG (
+                ch_assembly,
+                []
+                )
+        } /*else {
+            ARG (
+                ch_prepped_input.fastas,
+                ch_prepped_input.faas
+                    .filter {
+                        meta, file ->
+                        if ( file.isEmpty() ) log.warn("[nf-core/funcscan] Annotation of following sample produced an empty FAA file. ARG screening tools requiring this file will not be executed: ${meta.id}")
+                            !file.isEmpty()
+                    }
+            )
+        }*/
+        ch_versions = ch_versions.mix( ARG.out.versions )
+    }
+
+    //
+    //
+    // SUBWORKFLOW: TAXONOMY
+    //
+    TAXONOMY (
+        ch_assembly,
+        params.gambitdb
+    )
+    //
+    //
+    // SUBWORKFLOW: PITIS
+    //
+    PITIS (
+        ch_assembly
+    )
+
     // Collate and save software versions
     //
     softwareVersionsToYAML(ch_versions)
@@ -526,7 +568,6 @@ workflow BACASS {
             sort: true,
             newLine: true
         ).set { ch_collated_versions }
-
 
     //
     // MODULE: MultiQC
