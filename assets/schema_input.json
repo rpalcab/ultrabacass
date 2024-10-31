@@ -83,6 +83,20 @@
                         "maxLength": 0
                     }
                 ]
+            },
+            "Assembly": {
+                "errorMessage": "Assembly file cannot contain spaces and must have extension '.fasta', '.fa', or '.fna'",
+                "anyOf": [
+                    {
+                        "type": ["string", "null"],
+                        "exists": true,
+                        "pattern": "^(\\S+\\.f(asta|a|na)|NA)$"
+                    },
+                    {
+                        "type": "string",
+                        "minLength": 0
+                    }
+                ]
             }
         },
         "required": ["ID"]
