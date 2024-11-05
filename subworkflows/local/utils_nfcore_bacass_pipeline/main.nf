@@ -75,11 +75,11 @@ workflow PIPELINE_INITIALISATION {
     Channel
         .fromList(samplesheetToList(params.input, "${projectDir}/assets/schema_input.json"))
         .map {
-            meta, fastq_1, fastq_2, longreads, fast5 ->
+            meta, fastq_1, fastq_2, longreads, fast5, assembly ->
             if (!fastq_2) {
-                return [ meta.id, meta + [ single_end:true ], [ fastq_1 ], longreads, fast5 ]
+                return [ meta.id, meta + [ single_end:true ], [ fastq_1 ], longreads, fast5, assembly ]
             } else {
-                return [ meta.id, meta + [ single_end:false ], [ fastq_1, fastq_2 ], longreads, fast5 ]
+                return [ meta.id, meta + [ single_end:false ], [ fastq_1, fastq_2 ], longreads, fast5, assembly ]
             }
         }
         .groupTuple()
@@ -87,8 +87,8 @@ workflow PIPELINE_INITIALISATION {
             validateInputSamplesheet(samplesheet)
         }
         .map {
-            meta, fastqs, longread, fast5 ->
-                return [ meta, fastqs, longread[0], fast5[0] ]
+            meta, fastqs, longread, fast5, assembly ->
+                return [ meta, fastqs, longread[0], fast5[0], assembly[0] ]
         }
         .set { ch_samplesheet }
 
@@ -112,7 +112,7 @@ workflow PIPELINE_COMPLETION {
     outdir          //    path: Path to output directory where results will be published
     monochrome_logs // boolean: Disable ANSI colour codes in log output
     hook_url        //  string: hook URL for notifications
-    multiqc_report  //  string: Path to MultiQC report
+    //multiqc_report  //  string: Path to MultiQC report
 
     main:
     summary_params = paramsSummaryMap(workflow, parameters_schema: "nextflow_schema.json")
@@ -129,7 +129,7 @@ workflow PIPELINE_COMPLETION {
                 plaintext_email,
                 outdir,
                 monochrome_logs,
-                multiqc_report.toList()
+                //multiqc_report.toList()
             )
         }
 
@@ -180,14 +180,14 @@ def validateInputParameters() {
 // Validate channels from input samplesheet
 //
 def validateInputSamplesheet(input) {
-    def (metas, fastqs, longread, fast5) = input[1..4]
+    def (metas, fastqs, longread, fast5, assembly) = input[1..5]
     // Check that multiple runs of the same sample are of the same datatype i.e. single-end / paired-end
     def endedness_ok = metas.collect{ meta -> meta.single_end }.unique().size == 1
     if (!endedness_ok) {
         error("Please check input samplesheet -> Multiple runs of a sample must be of the same datatype i.e. single-end or paired-end: ${metas[0].id}")
     }
 
-    return [ metas[0], fastqs, longread, fast5]
+    return [ metas[0], fastqs, longread, fast5, assembly]
 }
 //
 // Generate methods description for MultiQC
