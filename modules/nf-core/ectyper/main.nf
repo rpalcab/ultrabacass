@@ -8,7 +8,7 @@ process ECTYPER {
         'biocontainers/ectyper:1.0.0--pyhdfd78af_1' }"
 
     input:
-    tuple val(meta), path(fasta)
+    tuple val(meta), val(fasta_files_string)
 
     output:
     tuple val(meta), path("*.log"), emit: log
@@ -22,18 +22,12 @@ process ECTYPER {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def is_compressed = fasta.getName().endsWith(".gz") ? true : false
-    def fasta_name = fasta.getName().replace(".gz", "")
     """
-    if [ "$is_compressed" == "true" ]; then
-        gzip -c -d $fasta > $fasta_name
-    fi
-
     ectyper \\
         $args \\
         --cores $task.cpus \\
         --output ./ \\
-        --input $fasta_name
+        --input $fasta_files_string
 
     mv output.tsv ${prefix}.tsv
 

@@ -21,19 +21,13 @@ process GAMBIT_TAXONOMY {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def is_compressed = fasta.getName().endsWith(".gz") ? true : false
-    def fasta_name = fasta.getName().replace(".gz", "")
     """
-    if [ "$is_compressed" == "true" ]; then
-        gzip -c -d $fasta > $fasta_name
-    fi
-
     gambit \\
         $args \\
         --db $db \\
         query \\
         -o ${prefix}_gambit.txt \\
-        $fasta_name
+        $fasta
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -10,17 +10,30 @@ workflow TAXONOMY {
     ch_path_gambitdb
 
     main:
+    ch_fasta
+        .collect{it[1]}
+        .map{ fasta -> tuple([id:'report'], fasta)}
+        .set{ ch_fasta_all}
+
     KLEBORATE (
-        ch_fasta
+        ch_fasta_all
     )
     MLST (
-        ch_fasta
+        ch_fasta_all
     )
+    ch_fasta
+        .collect{it[1]}
+        .map { files ->
+            def fileString = files.join(',')
+            [ [id: 'report'], fileString ]
+        }
+        .set { ch_ectyper }
+
     ECTYPER (
-        ch_fasta
+        ch_ectyper
     )
     GAMBIT_TAXONOMY (
-        ch_fasta,
+        ch_fasta_all,
         ch_path_gambitdb    
     )
 
